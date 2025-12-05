@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +16,7 @@ export const Header = () => {
   const { data: unreadNotifications } = useQuery({
     queryKey: ['unread-notifications', user?.id],
     queryFn: async () => {
+      if (!supabase) return 0;
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -24,13 +25,14 @@ export const Header = () => {
       
       return count || 0;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isSupabaseConfigured(),
   });
 
   // Get unread messages count
   const { data: unreadMessages } = useQuery({
     queryKey: ['unread-messages', user?.id],
     queryFn: async () => {
+      if (!supabase) return 0;
       const { data: conversations } = await supabase
         .from('conversations')
         .select('id')
@@ -47,7 +49,7 @@ export const Header = () => {
 
       return count || 0;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isSupabaseConfigured(),
   });
 
   return (
